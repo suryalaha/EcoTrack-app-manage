@@ -27,6 +27,7 @@ interface AuthContextType {
   loginAsStaff: (identifier: string, role: 'employee' | 'driver') => Promise<LoginResult>;
   logout: () => void;
   toggleBookingReminders: () => void;
+  updateNotificationSettings: (settings: Partial<{ push: boolean; email: boolean; sms: boolean }>) => void;
   updateUserName: (newName: string) => void;
   updateUserEmail: (newEmail: string) => void;
   updateUserProfilePicture: (pictureDataUrl: string) => void;
@@ -157,6 +158,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         status: 'active',
         hasGreenBadge: false,
         bookingReminders: true,
+        pushNotifications: true,
+        emailNotifications: true,
+        smsNotifications: true,
         profilePicture: '',
         email: isEmail ? normalizedIdentifier : '',
         createdAt: new Date(),
@@ -245,6 +249,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const updateNotificationSettings = (settings: Partial<{ push: boolean; email: boolean; sms: boolean }>) => {
+      if (user) {
+          const updatedUser = {
+              ...user,
+              pushNotifications: settings.push ?? user.pushNotifications,
+              emailNotifications: settings.email ?? user.emailNotifications,
+              smsNotifications: settings.sms ?? user.smsNotifications,
+          };
+          updateUserData(updatedUser);
+      }
+  };
+
   const updateUserName = (newName: string) => {
     if(user) {
       const updatedUser = { ...user, name: newName };
@@ -267,7 +283,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, login, signup, loginAsAdmin, loginAsStaff, logout, toggleBookingReminders, updateUserName, updateUserEmail, updateUserProfilePicture }}>
+    <AuthContext.Provider value={{ isLoggedIn, user, login, signup, loginAsAdmin, loginAsStaff, logout, toggleBookingReminders, updateNotificationSettings, updateUserName, updateUserEmail, updateUserProfilePicture }}>
       {children}
     </AuthContext.Provider>
   );

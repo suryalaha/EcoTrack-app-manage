@@ -26,6 +26,9 @@ export interface User {
     warningMessage?: string;
     hasGreenBadge?: boolean;
     bookingReminders?: boolean;
+    pushNotifications?: boolean;
+    emailNotifications?: boolean;
+    smsNotifications?: boolean;
     profilePicture?: string;
     email?: string;
     createdAt: Date;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
-import { User, Shield, Save, CheckCircle, Camera, Upload, X, Mail, ChevronRight, MessageSquareWarning, Star, HelpCircle } from 'lucide-react';
+import { User, Shield, Save, CheckCircle, Camera, Upload, X, Mail, ChevronRight, MessageSquareWarning, Star, HelpCircle, Bell, ChevronUp } from 'lucide-react';
 import { View, ViewType } from '../types';
 
 interface CameraModalProps {
@@ -87,13 +87,14 @@ interface ProfileComponentProps {
 }
 
 const ProfileComponent: React.FC<ProfileComponentProps> = ({ setCurrentView }) => {
-    const { user, updateUserName, updateUserProfilePicture, updateUserEmail } = useAuth();
+    const { user, updateUserName, updateUserProfilePicture, updateUserEmail, updateNotificationSettings } = useAuth();
     const { messages } = useData();
     const [name, setName] = useState(user?.name || '');
     const [email, setEmail] = useState(user?.email || '');
     const [isSaved, setIsSaved] = useState(false);
     const [isCameraOpen, setIsCameraOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     
     const unreadCount = useMemo(() => {
         if (!user) return 0;
@@ -177,6 +178,19 @@ const ProfileComponent: React.FC<ProfileComponentProps> = ({ setCurrentView }) =
             color: 'text-sky-500'
         }
     ];
+
+    const ToggleSwitch: React.FC<{ label: string; enabled: boolean; onToggle: () => void; }> = ({ label, enabled, onToggle }) => (
+        <div className="flex items-center justify-between py-3 px-8">
+            <span className="font-medium text-text-light dark:text-text-dark">{label}</span>
+            <button
+                onClick={onToggle}
+                className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${enabled ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
+                aria-pressed={enabled}
+            >
+                <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+            </button>
+        </div>
+    );
 
     return (
         <div className="space-y-6">
@@ -286,6 +300,34 @@ const ProfileComponent: React.FC<ProfileComponentProps> = ({ setCurrentView }) =
                             </button>
                         </li>
                     ))}
+                    <li>
+                        <button onClick={() => setIsNotificationsOpen(!isNotificationsOpen)} className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                            <div className="flex items-center">
+                                <Bell className="w-6 h-6 mr-4 text-purple-500" />
+                                <span className="font-medium text-text-light dark:text-text-dark">Notifications</span>
+                            </div>
+                            {isNotificationsOpen ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
+                        </button>
+                        {isNotificationsOpen && (
+                            <div className="bg-slate-50 dark:bg-slate-800/50 animate-fade-in-down py-2">
+                                <ToggleSwitch
+                                    label="Push Notifications"
+                                    enabled={!!user.pushNotifications}
+                                    onToggle={() => updateNotificationSettings({ push: !user.pushNotifications })}
+                                />
+                                <ToggleSwitch
+                                    label="Email Notifications"
+                                    enabled={!!user.emailNotifications}
+                                    onToggle={() => updateNotificationSettings({ email: !user.emailNotifications })}
+                                />
+                                <ToggleSwitch
+                                    label="SMS Notifications"
+                                    enabled={!!user.smsNotifications}
+                                    onToggle={() => updateNotificationSettings({ sms: !user.smsNotifications })}
+                                />
+                            </div>
+                        )}
+                    </li>
                 </ul>
             </div>
             {isCameraOpen && <CameraModal onPictureTaken={handlePictureTaken} onClose={() => setIsCameraOpen(false)} />}
