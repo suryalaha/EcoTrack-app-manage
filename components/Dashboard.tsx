@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { User, Booking, WasteLog } from '../types';
-import { Truck, Video, BarChart2, MapPin, BellRing, IndianRupee, CheckCircle, Flame, Target } from 'lucide-react';
+import { Truck, Video, BarChart2, MapPin, BellRing, IndianRupee, CheckCircle, Flame, Target, Loader2 } from 'lucide-react';
 import { PieChart, Pie, ResponsiveContainer, Cell, Sector } from 'recharts';
 import { useLanguage } from '../context/LanguageContext';
 import { useData } from '../context/DataContext';
+import { getETA } from '../services/geminiService';
 
 interface DashboardProps {
   user: User;
@@ -50,6 +51,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, bookings, users }) => {
   const [upcomingBooking, setUpcomingBooking] = useState<Booking | null>(null);
   const [activeDriver, setActiveDriver] = useState<User | null>(null);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [eta, setEta] = useState<string | null>(null);
+  const [isLoadingEta, setIsLoadingEta] = useState(false);
   
   const totalWaste = communityData.reduce((sum, entry) => sum + entry.value, 0);
 
@@ -73,6 +76,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, bookings, users }) => {
     );
     setActiveDriver(driver || null);
   }, [users]); // This will re-run whenever the user data (including locations) changes
+  
+  useEffect(() => {
+    if (activeDriver && user.lastLocation) {
+        const fetchEta = async () => {
+            if (!activeDriver?.lastLocation) return;
+            setIsLoadingEta(true);
+            const result = await getETA(
+                { lat: activeDriver.lastLocation.lat, lng: activeDriver.lastLocation.lng },
+                { lat: user.lastLocation.lat, lng: user.lastLocation.lng }
+            );
+            setEta(result);
+            setIsLoadingEta(false);
+        };
+        fetchEta();
+    }
+  }, [activeDriver, user.lastLocation]);
 
   useEffect(() => {
     if (user.bookingReminders) {
@@ -171,6 +190,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, bookings, users }) => {
              <p className="text-sm text-text-light dark:text-text-dark">
                 Driver <span className="font-bold text-primary">{activeDriver.name}</span> is on the way.
             </p>
+            {isLoadingEta && (
+                <div className="flex items-center text-sm text-primary animate-pulse">
+                    <Loader2 size={16} className="animate-spin mr-2" />
+                    Calculating ETA...
+                </div>
+            )}
+            {eta && !isLoadingEta && (
+                <p className="text-sm font-semibold text-primary">
+                    Estimated Arrival: <span className="font-bold text-lg">{eta}</span>
+                </p>
+            )}
             <p className="text-xs text-slate-500 dark:text-slate-400">
                 Last updated: {activeDriver.lastLocation.timestamp.toLocaleTimeString()}
             </p>

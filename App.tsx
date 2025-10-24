@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Home, IndianRupee, History, MessageSquareWarning, Bot, ShoppingBasket, User as UserIcon, Mail } from 'lucide-react';
+import { Home, IndianRupee, History, MessageSquareWarning, Bot, ShoppingBasket, User as UserIcon, Mail, Map } from 'lucide-react';
 
 import type { View, User } from './types';
 import { ViewType } from './types';
@@ -11,6 +11,7 @@ import EducationComponent from './components/Education';
 import BookingComponent from './components/Booking';
 import ProfileComponent from './components/Profile';
 import MessagesComponent from './components/MessagesComponent';
+import TrackingComponent from './components/Tracking';
 import Header from './components/Header';
 import Chatbot from './components/Chatbot';
 import BroadcastModal from './components/BroadcastModal';
@@ -100,6 +101,8 @@ const UserApp: React.FC<{ users: User[] }> = ({ users }) => {
         return <Dashboard user={user} bookings={userBookings} users={users} />;
       case ViewType.Payment:
         return <PaymentComponent setCurrentView={setCurrentView} />;
+      case ViewType.Tracking:
+        return <TrackingComponent />;
       case ViewType.History:
         return <HistoryComponent payments={userPayments} />;
       case ViewType.Complaints:
@@ -215,10 +218,10 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentView, setCurrentView }) =>
   const navItems = [
     { view: ViewType.Dashboard, icon: Home, label: 'Home' },
     { view: ViewType.Payment, icon: IndianRupee, label: 'Pay' },
-    { view: ViewType.Messages, icon: Mail, label: 'Inbox', badgeCount: unreadCount },
+    { view: ViewType.Tracking, icon: Map, label: 'Track' },
     { view: ViewType.Booking, icon: ShoppingBasket, label: 'Book' },
     { view: ViewType.History, icon: History, label: 'History' },
-    { view: ViewType.Profile, icon: UserIcon, label: 'Profile' },
+    { view: ViewType.Profile, icon: UserIcon, label: 'Profile', badgeCount: unreadCount },
   ];
 
   return (

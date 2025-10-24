@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
 import { User, Shield, Save, CheckCircle, Camera, Upload, X, Mail, ChevronRight, MessageSquareWarning, Star, HelpCircle } from 'lucide-react';
 import { View, ViewType } from '../types';
 
@@ -87,11 +88,17 @@ interface ProfileComponentProps {
 
 const ProfileComponent: React.FC<ProfileComponentProps> = ({ setCurrentView }) => {
     const { user, updateUserName, updateUserProfilePicture, updateUserEmail } = useAuth();
+    const { messages } = useData();
     const [name, setName] = useState(user?.name || '');
     const [email, setEmail] = useState(user?.email || '');
     const [isSaved, setIsSaved] = useState(false);
     const [isCameraOpen, setIsCameraOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    
+    const unreadCount = useMemo(() => {
+        if (!user) return 0;
+        return messages.filter(m => m.recipientId === user.householdId && !m.read).length;
+    }, [user, messages]);
 
     useEffect(() => {
         if (user) {
@@ -145,6 +152,13 @@ const ProfileComponent: React.FC<ProfileComponentProps> = ({ setCurrentView }) =
 
      const optionItems = [
         {
+            label: 'Inbox',
+            icon: Mail,
+            action: () => setCurrentView(ViewType.Messages),
+            color: 'text-blue-500',
+            badge: unreadCount,
+        },
+        {
             label: 'File a Complaint',
             icon: MessageSquareWarning,
             action: () => setCurrentView(ViewType.Complaints),
@@ -160,7 +174,7 @@ const ProfileComponent: React.FC<ProfileComponentProps> = ({ setCurrentView }) =
             label: 'Help & FAQ',
             icon: HelpCircle,
             action: () => setCurrentView(ViewType.HelpAndFaq),
-            color: 'text-blue-500'
+            color: 'text-sky-500'
         }
     ];
 
@@ -261,7 +275,14 @@ const ProfileComponent: React.FC<ProfileComponentProps> = ({ setCurrentView }) =
                                     <item.icon className={`w-6 h-6 mr-4 ${item.color}`} />
                                     <span className="font-medium text-text-light dark:text-text-dark">{item.label}</span>
                                 </div>
-                                <ChevronRight className="w-5 h-5 text-slate-400" />
+                                <div className="flex items-center">
+                                    {item.badge && item.badge > 0 && (
+                                        <span className="w-6 h-6 text-xs bg-red-500 text-white font-bold rounded-full flex items-center justify-center mr-2">
+                                            {item.badge > 9 ? '9+' : item.badge}
+                                        </span>
+                                    )}
+                                    <ChevronRight className="w-5 h-5 text-slate-400" />
+                                </div>
                             </button>
                         </li>
                     ))}

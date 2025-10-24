@@ -1,4 +1,5 @@
 
+
 import { GoogleGenAI } from "@google/genai";
 
 const API_KEY = process.env.API_KEY;
@@ -43,5 +44,48 @@ export const getChatbotResponse = async (prompt: string): Promise<string> => {
     } catch (error) {
         console.error("Error getting response from Gemini API:", error);
         return "Sorry, I'm having trouble connecting to my brain right now. Please try again later.";
+    }
+};
+
+export const getETA = async (
+    driverLocation: { lat: number; lng: number },
+    userLocation: { lat: number; lng: number }
+): Promise<string | null> => {
+    if (!API_KEY) {
+        console.warn("Gemini API key not found. ETA functionality disabled.");
+        return null;
+    }
+    try {
+        const prompt = `What is the estimated driving time from latitude ${driverLocation.lat}, longitude ${driverLocation.lng} to latitude ${userLocation.lat}, longitude ${userLocation.lng}? Respond with only the number of minutes, for example: '15'.`;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                tools: [{ googleMaps: {} }],
+            },
+        });
+
+        const text = response.text.trim();
+        const minutes = parseInt(text, 10);
+
+        if (!isNaN(minutes)) {
+            if (minutes < 1) return '< 1 min';
+            return `${minutes} min`;
+        }
+        
+        // Fallback for more verbose responses
+        const match = text.match(/(\d+)\s*minutes?/);
+        if (match && match[1]) {
+            const parsedMinutes = parseInt(match[1], 10);
+            if (parsedMinutes < 1) return '< 1 min';
+            return `${parsedMinutes} min`;
+        }
+        
+        console.warn('Could not parse ETA from Gemini response:', text);
+        return "Not available";
+    } catch (error) {
+        console.error("Error getting ETA from Gemini API:", error);
+        return "Not available";
     }
 };

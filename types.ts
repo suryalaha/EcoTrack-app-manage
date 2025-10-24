@@ -11,6 +11,7 @@ export enum ViewType {
     Messages = 'Messages',
     HelpAndFaq = 'HelpAndFaq',
     Feedback = 'Feedback',
+    Tracking = 'Tracking',
 }
 
 export type View = ViewType;
