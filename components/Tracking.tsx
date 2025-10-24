@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { MapPin, Truck, Home, Loader2, MapPinOff } from 'lucide-react';
+import { MapPin, Truck, Home, Loader2, MapPinOff, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { getETA } from '../services/geminiService';
@@ -85,7 +85,6 @@ const TrackingComponent: React.FC = () => {
 
         if (activeDriver?.lastLocation && userLocation) {
             setIsLoadingEta(true);
-            setEta(null);
             
             let etaResult: string | null;
             if (isDataMocked) {
@@ -112,7 +111,11 @@ const TrackingComponent: React.FC = () => {
 
     useEffect(() => {
         if (permissionStatus === 'granted') {
-            fetchTrackingData();
+            fetchTrackingData(); // Initial fetch on permission grant or dependency change
+
+            const intervalId = setInterval(fetchTrackingData, 30000); // Refresh every 30 seconds
+
+            return () => clearInterval(intervalId); // Cleanup interval
         }
     }, [permissionStatus, fetchTrackingData]);
 
@@ -183,13 +186,17 @@ const TrackingComponent: React.FC = () => {
                         </div>
                     )}
                     {eta && !isLoadingEta && (
-                         <p className="text-4xl font-bold text-primary mt-1">{eta}</p>
+                        eta === "Not available" ? (
+                            <div className="flex items-center justify-center text-amber-600 dark:text-amber-400 mt-2">
+                                <AlertCircle size={20} className="mr-2"/>
+                                <p className="text-xl font-bold">{eta}</p>
+                            </div>
+                        ) : (
+                            <p className="text-4xl font-bold text-primary mt-1">{eta}</p>
+                        )
                     )}
-                    {!eta && !isLoadingEta && user?.lastLocation && (
-                        <p className="text-lg font-bold text-red-500 mt-1">Could not calculate ETA.</p>
-                    )}
-                     {!user?.lastLocation && !isLoadingEta && (
-                         <p className="text-sm text-amber-600 mt-2">Enable location to calculate ETA.</p>
+                    {!eta && !isLoadingEta && (
+                         <p className="text-sm text-amber-600 dark:text-amber-500 mt-2">Could not calculate ETA at this time.</p>
                     )}
                 </div>
 

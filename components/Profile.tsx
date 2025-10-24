@@ -180,7 +180,7 @@ const ProfileComponent: React.FC<ProfileComponentProps> = ({ setCurrentView }) =
     ];
 
     const ToggleSwitch: React.FC<{ label: string; enabled: boolean; onToggle: () => void; }> = ({ label, enabled, onToggle }) => (
-        <div className="flex items-center justify-between py-3 px-8">
+        <div className="flex items-center justify-between py-3 pr-4">
             <span className="font-medium text-text-light dark:text-text-dark">{label}</span>
             <button
                 onClick={onToggle}
@@ -309,7 +309,7 @@ const ProfileComponent: React.FC<ProfileComponentProps> = ({ setCurrentView }) =
                             {isNotificationsOpen ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronRight className="w-5 h-5 text-slate-400" />}
                         </button>
                         {isNotificationsOpen && (
-                            <div className="bg-slate-50 dark:bg-slate-800/50 animate-fade-in-down py-2">
+                            <div className="bg-slate-50 dark:bg-slate-800/50 animate-fade-in-down py-1 pl-4 border-l-4 border-primary/20">
                                 <ToggleSwitch
                                     label="Push Notifications"
                                     enabled={!!user.pushNotifications}

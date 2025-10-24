@@ -19,14 +19,30 @@ const faqContent = [
     question: "How can I book a special collection for bulk waste?",
     answer: "Go to the 'Book' tab. You can schedule a special pickup for event waste, bulk household items, or garden waste. Please note that additional charges may apply for these services.",
   },
+    {
+    question: "The tracking screen shows 'No active vehicle'. What does this mean?",
+    answer: "This message appears when there is no collection vehicle currently operating in your designated area. The live tracking feature will automatically activate and show the driver's location as soon as they begin their route near you."
+  },
+  {
+    question: "Why should I log my waste type every day?",
+    answer: "Logging your daily waste helps us gather data to improve collection routes and promote better segregation habits. It also helps you track your household's waste patterns and avoid fines for improper segregation."
+  },
+  {
+    question: "Can I be fined for not segregating waste?",
+    answer: "Yes. To encourage proper waste segregation, a fine of ₹100 is automatically applied if 'Mixed Waste' is logged for three consecutive days. You can track your consecutive mixed waste logs on the Dashboard."
+  },
+  {
+    question: "How can I update my profile information?",
+    answer: "You can update your name, email, and profile picture in the 'Profile' section. Your household ID and identifier (mobile/email) cannot be changed through the app.",
+  },
+   {
+    question: "How can I manage my notifications?",
+    answer: "You have full control over your notifications. Go to the 'Profile' tab, find 'More Options', and tap on 'Notifications'. From there, you can toggle Push, Email, and SMS notifications on or off."
+  },
   {
     question: "How is my login streak calculated?",
     answer: "Your login streak increases by one for each consecutive day you open the app. It's a fun way to stay engaged with your waste management responsibilities!",
   },
-   {
-    question: "How can I update my profile information?",
-    answer: "You can update your name, email, and profile picture in the 'Profile' section. Your household ID and identifier (mobile/email) cannot be changed through the app.",
-  }
 ];
 
 const HelpAndFaq: React.FC<HelpAndFaqProps> = ({ setCurrentView }) => {

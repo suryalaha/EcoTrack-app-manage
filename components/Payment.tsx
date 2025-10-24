@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { QRCodeCanvas as QRCode } from 'qrcode.react';
-import { CheckCircle, Wallet, X, Loader2, QrCode, UploadCloud, Check, XCircle, ShieldCheck } from 'lucide-react';
+import { CheckCircle, Wallet, X, Loader2, QrCode, UploadCloud, Check, XCircle, ShieldCheck, CreditCard, User, Calendar, Lock } from 'lucide-react';
 
 import type { Payment, View } from '../types';
 import { ViewType } from '../types';
@@ -13,11 +13,13 @@ interface PaymentComponentProps {
 }
 
 type PaymentStep = 'pay' | 'upload' | 'otp' | 'confirm' | 'error';
+type PaymentMethod = 'upi' | 'card';
 
 const PaymentComponent: React.FC<PaymentComponentProps> = ({ setCurrentView }) => {
     const { user } = useAuth();
     const { addPayment } = useData();
     const [step, setStep] = useState<PaymentStep>('pay');
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('upi');
     const [showQrModal, setShowQrModal] = useState(false);
     const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
     const [screenshotPreview, setScreenshotPreview] = useState<string>('');
@@ -29,6 +31,9 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({ setCurrentView }) =
     const [generatedOtp, setGeneratedOtp] = useState('');
     const [otpError, setOtpError] = useState('');
     const [resendTimer, setResendTimer] = useState(0);
+
+    const [cardDetails, setCardDetails] = useState({ number: '', name: '', expiry: '', cvv: '' });
+    const [cardError, setCardError] = useState('');
 
     const paymentAmount = user?.outstandingBalance ?? 0;
     const upiPaymentUrl = generateUpiUrl(paymentAmount, `Payment for ${user?.householdId}`);
@@ -54,13 +59,12 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({ setCurrentView }) =
         }
     };
 
-    const handleSubmitForVerification = async () => {
-        if (!user || !screenshotPreview) return;
+    const handleGoToOtp = () => {
         setIsSubmitting(true);
-        
+        setScreenshotPreview(paymentMethod === 'card' ? '' : screenshotPreview); // Clear screenshot for card payments
         setTimeout(() => {
             const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-            console.log(`Generated OTP for user ${user.identifier}: ${newOtp}`); // For debugging
+            console.log(`Generated OTP for user ${user?.identifier}: ${newOtp}`); // For debugging
             setGeneratedOtp(newOtp);
             setResendTimer(30);
             setOtp('');
@@ -68,7 +72,33 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({ setCurrentView }) =
             setStep('otp');
             setIsSubmitting(false);
         }, 1000);
-    };
+    }
+
+    const handleCardDetailsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        let formattedValue = value;
+
+        if (name === 'number') {
+            formattedValue = value.replace(/[^\d]/g, '').replace(/(.{4})/g, '$1 ').trim().slice(0, 19);
+        } else if (name === 'expiry') {
+            formattedValue = value.replace(/[^\d]/g, '').replace(/(\d{2})(\d{0,2})/, '$1/$2').slice(0, 5);
+        } else if (name === 'cvv') {
+            formattedValue = value.replace(/[^\d]/g, '').slice(0, 4);
+        }
+
+        setCardDetails(prev => ({ ...prev, [name]: formattedValue }));
+        setCardError('');
+    }
+
+    const handleCardPaymentSubmit = () => {
+        const { number, name, expiry, cvv } = cardDetails;
+        if (number.length !== 19 || name.trim() === '' || expiry.length !== 5 || cvv.length < 3) {
+            setCardError('Please fill in all card details correctly.');
+            return;
+        }
+        setCardError('');
+        handleGoToOtp();
+    }
 
     const handleVerifyOtpAndSubmit = async () => {
         if (otp !== generatedOtp) {
@@ -86,7 +116,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({ setCurrentView }) =
             date: new Date(),
             amount: paymentAmount,
             status: 'Pending Verification',
-            screenshot: screenshotPreview,
+            ...(screenshotPreview && { screenshot: screenshotPreview }),
         };
 
         try {
@@ -130,44 +160,63 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({ setCurrentView }) =
             </div>
             
             {paymentAmount > 0 ? (
-                <>
-                    <div className="mt-8 max-w-sm mx-auto p-4 rounded-lg bg-slate-100/70 dark:bg-slate-800/50 border border-border-light dark:border-border-dark">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg">1</div>
-                            <h3 className="text-left text-lg font-semibold text-heading-light dark:text-heading-dark">Complete Your Payment</h3>
+                <div className="mt-8 max-w-sm mx-auto">
+                    <div className="flex items-center justify-center p-1 rounded-full bg-slate-100 dark:bg-slate-700 mb-6 w-full">
+                        <button onClick={() => setPaymentMethod('upi')} className={`w-1/2 p-2 rounded-full font-semibold text-sm transition-colors flex items-center justify-center gap-2 ${paymentMethod === 'upi' ? 'bg-white dark:bg-slate-800 shadow text-primary' : 'text-slate-500'}`}><QrCode size={16}/> UPI / QR</button>
+                        <button onClick={() => setPaymentMethod('card')} className={`w-1/2 p-2 rounded-full font-semibold text-sm transition-colors flex items-center justify-center gap-2 ${paymentMethod === 'card' ? 'bg-white dark:bg-slate-800 shadow text-primary' : 'text-slate-500'}`}><CreditCard size={16}/> Credit/Debit Card</button>
+                    </div>
+                    {paymentMethod === 'upi' ? (
+                        <div className="animate-fade-in space-y-6">
+                            <div className="p-4 rounded-lg bg-slate-100/70 dark:bg-slate-800/50 border border-border-light dark:border-border-dark">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg">1</div>
+                                    <h3 className="text-left text-lg font-semibold text-heading-light dark:text-heading-dark">Complete Your Payment</h3>
+                                </div>
+                                 <p className="text-sm text-text-light dark:text-text-dark mb-4 text-left">Choose your preferred UPI method to pay.</p>
+                                <div className="space-y-3">
+                                     <a href={upiPaymentUrl} target="_blank" rel="noopener noreferrer" className="w-full bg-gradient-to-r from-secondary to-slate-700 dark:from-slate-600 dark:to-slate-800 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center text-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105"><Wallet className="mr-3" /> Pay with UPI App</a>
+                                    <button onClick={() => setShowQrModal(true)} className="w-full bg-gradient-to-r from-secondary to-slate-700 dark:from-slate-600 dark:to-slate-800 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center text-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105"><QrCode className="mr-3" /> Scan QR Code</button>
+                                </div>
+                            </div>
+                            <div className="p-4 rounded-lg bg-slate-100/70 dark:bg-slate-800/50 border border-border-light dark:border-border-dark">
+                                 <div className="flex items-center gap-3 mb-4">
+                                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg">2</div>
+                                    <h3 className="text-left text-lg font-semibold text-heading-light dark:text-heading-dark">Upload Proof</h3>
+                                </div>
+                                 <p className="text-sm text-text-light dark:text-text-dark mb-4 text-left">After successful payment, a screenshot is mandatory for verification.</p>
+                                <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
+                                <button onClick={() => fileInputRef.current?.click()} className="w-full bg-gradient-to-r from-primary to-accent text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center text-lg shadow-lg hover:shadow-glow-primary transition-all transform hover:scale-105"><UploadCloud className="mr-3" /> Upload Screenshot</button>
+                            </div>
                         </div>
-                         <p className="text-sm text-text-light dark:text-text-dark mb-4 text-left">Choose your preferred UPI method to pay the outstanding amount.</p>
-                        <div className="space-y-3">
-                             <a 
-                                href={upiPaymentUrl}
-                                className="w-full bg-gradient-to-r from-secondary to-slate-700 dark:from-slate-600 dark:to-slate-800 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center text-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105"
-                            >
-                                <Wallet className="mr-3" /> Pay with UPI App
-                            </a>
-                            <button 
-                                onClick={() => setShowQrModal(true)}
-                                className="w-full bg-gradient-to-r from-secondary to-slate-700 dark:from-slate-600 dark:to-slate-800 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center text-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105"
-                            >
-                                <QrCode className="mr-3" /> Scan QR Code
+                    ) : (
+                        <div className="animate-fade-in p-4 rounded-lg bg-slate-100/70 dark:bg-slate-800/50 border border-border-light dark:border-border-dark text-left space-y-4">
+                            <h3 className="text-lg font-semibold text-heading-light dark:text-heading-dark">Enter Card Details</h3>
+                            <div className="relative">
+                                <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                                <input type="tel" name="number" placeholder="Card Number" value={cardDetails.number} onChange={handleCardDetailsChange} className="w-full p-3 pl-10 border border-border-light dark:border-border-dark bg-background-light dark:bg-slate-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"/>
+                            </div>
+                             <div className="relative">
+                                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                                <input type="text" name="name" placeholder="Cardholder Name" value={cardDetails.name} onChange={handleCardDetailsChange} className="w-full p-3 pl-10 border border-border-light dark:border-border-dark bg-background-light dark:bg-slate-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"/>
+                            </div>
+                             <div className="grid grid-cols-2 gap-4">
+                                 <div className="relative">
+                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                                    <input type="tel" name="expiry" placeholder="MM / YY" value={cardDetails.expiry} onChange={handleCardDetailsChange} className="w-full p-3 pl-10 border border-border-light dark:border-border-dark bg-background-light dark:bg-slate-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"/>
+                                </div>
+                                <div className="relative">
+                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                                    <input type="tel" name="cvv" placeholder="CVV" value={cardDetails.cvv} onChange={handleCardDetailsChange} className="w-full p-3 pl-10 border border-border-light dark:border-border-dark bg-background-light dark:bg-slate-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"/>
+                                </div>
+                            </div>
+                             {cardError && <p className="text-red-500 text-sm">{cardError}</p>}
+                            <button onClick={handleCardPaymentSubmit} disabled={isSubmitting} className="w-full bg-gradient-to-r from-primary to-accent text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center text-lg shadow-lg hover:shadow-glow-primary transition-all transform hover:scale-105 disabled:opacity-50">
+                                {isSubmitting ? <Loader2 className="animate-spin mr-3"/> : <Wallet className="mr-3" />}
+                                {isSubmitting ? 'Processing...' : `Pay ₹${paymentAmount.toFixed(2)}`}
                             </button>
                         </div>
-                    </div>
-
-                    <div className="mt-6 max-w-sm mx-auto p-4 rounded-lg bg-slate-100/70 dark:bg-slate-800/50 border border-border-light dark:border-border-dark">
-                         <div className="flex items-center gap-3 mb-4">
-                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg">2</div>
-                            <h3 className="text-left text-lg font-semibold text-heading-light dark:text-heading-dark">Upload Proof</h3>
-                        </div>
-                         <p className="text-sm text-text-light dark:text-text-dark mb-4 text-left">After successful payment, a screenshot is mandatory for verification.</p>
-                        <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
-                        <button 
-                            onClick={() => fileInputRef.current?.click()}
-                            className="w-full bg-gradient-to-r from-primary to-accent text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center text-lg shadow-lg hover:shadow-glow-primary transition-all transform hover:scale-105"
-                        >
-                            <UploadCloud className="mr-3" /> Upload Screenshot
-                        </button>
-                    </div>
-                </>
+                    )}
+                </div>
             ) : (
                 <div className="mt-8 max-w-sm mx-auto p-4">
                     <p className="text-lg text-success font-semibold">You have no outstanding balance. Thank you!</p>
@@ -190,7 +239,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({ setCurrentView }) =
             )}
             <div className="mt-8 max-w-sm mx-auto space-y-4">
                  <button 
-                    onClick={handleSubmitForVerification}
+                    onClick={handleGoToOtp}
                     disabled={isSubmitting}
                     className="w-full bg-gradient-to-r from-primary to-accent text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center text-lg shadow-lg hover:shadow-glow-primary transition-all transform hover:scale-105 disabled:opacity-50"
                 >
@@ -273,7 +322,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({ setCurrentView }) =
                 {submissionError}
             </p>
             <button
-                onClick={() => setStep('upload')}
+                onClick={() => setStep(paymentMethod === 'upi' ? 'upload' : 'pay')}
                 className="w-full max-w-sm bg-gradient-to-r from-primary to-accent text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center text-lg shadow-lg hover:shadow-glow-primary transition-all transform hover:scale-105"
             >
                 Try Again

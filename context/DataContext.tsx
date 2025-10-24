@@ -1,5 +1,7 @@
+
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import type { User, Payment, Complaint, Booking, Message, Feedback, WasteLog } from '../types';
+import { sendNotification } from '../services/notificationService';
 
 export interface SubscriptionPlans {
     standard: number;
@@ -153,25 +155,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }
 
   const addPayment = (payment: Payment): Promise<Payment> => {
-    // Add payment to state optimistically
     setPayments(prev => [payment, ...prev]);
 
-    // This simulation remains, but now the final result is persisted
     if (payment.status === 'Pending Verification') {
+        sendNotification('Payment Submitted', {
+            body: `Your payment of ₹${payment.amount.toFixed(2)} is pending verification. We'll notify you of the result.`
+        });
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                const isSuccess = Math.random() < 0.8; // 80% success rate simulation
-                
-                let finalPayment: Payment = { ...payment };
-
+                const isSuccess = Math.random() < 0.8;
+                let finalPayment: Payment;
                 if (isSuccess) {
                     finalPayment = { ...payment, status: 'Paid' };
-                    // Deduct amount from user's balance
-                    setUsers(prevUsers => prevUsers.map(u => 
-                        u.householdId === payment.householdId
-                        ? { ...u, outstandingBalance: u.outstandingBalance - payment.amount }
-                        : u
-                    ));
                 } else {
                     finalPayment = { 
                         ...payment, 
@@ -179,26 +174,36 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         rejectionReason: 'Automated verification failed. Please check the screenshot and try again.' 
                     };
                 }
-                
-                // Update the payment status in the main state, which will trigger the useEffect to save it
-                setPayments(prevPayments => prevPayments.map(p => 
-                    p.id === payment.id ? finalPayment : p
-                ));
-                
-                if (isSuccess) {
-                    resolve(finalPayment);
-                } else {
-                    reject(finalPayment);
-                }
-            }, 3000); // 3-second delay to simulate backend processing
+                updatePayment(finalPayment);
+                if (isSuccess) resolve(finalPayment);
+                else reject(finalPayment);
+            }, 3000);
         });
     }
-
-    // If payment does not require verification, resolve immediately.
     return Promise.resolve(payment);
   };
 
   const updatePayment = (updatedPayment: Payment) => {
+    const originalPayment = payments.find(p => p.id === updatedPayment.id);
+
+    if (originalPayment && originalPayment.status !== updatedPayment.status) {
+        if (updatedPayment.status === 'Paid') {
+            if (originalPayment.status === 'Pending Verification') {
+                setUsers(prevUsers => prevUsers.map(u => 
+                    u.householdId === updatedPayment.householdId
+                    ? { ...u, outstandingBalance: Math.max(0, u.outstandingBalance - updatedPayment.amount) }
+                    : u
+                ));
+            }
+            sendNotification('Payment Approved!', {
+                body: `Your payment of ₹${updatedPayment.amount.toFixed(2)} has been approved.`
+            });
+        } else if (updatedPayment.status === 'Rejected') {
+            sendNotification('Payment Rejected', {
+                body: `Your payment of ₹${updatedPayment.amount.toFixed(2)} was rejected. ${updatedPayment.rejectionReason || ''}`
+            });
+        }
+    }
     setPayments(prev => prev.map(p => p.id === updatedPayment.id ? updatedPayment : p));
   }
   
@@ -267,18 +272,17 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (userIndex === -1) return;
 
     const user = users[userIndex];
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const lastLogDate = user.lastWasteLogDate ? new Date(user.lastWasteLogDate) : null;
-    if (lastLogDate) {
-        lastLogDate.setHours(0, 0, 0, 0);
+    const lastLogDateObj = user.lastWasteLogDate ? new Date(user.lastWasteLogDate) : null;
+    if (lastLogDateObj) {
+        lastLogDateObj.setHours(0, 0, 0, 0);
     }
 
-    if (lastLogDate && lastLogDate.getTime() === today.getTime()) {
-        console.log("User has already logged waste today.");
-        return; // Or handle updating the log
+    if (lastLogDateObj && lastLogDateObj.getTime() === today.getTime()) {
+        console.warn("User has already logged waste for today.");
+        return;
     }
 
     const newLog: WasteLog = {
@@ -293,17 +297,25 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     let newBalance = user.outstandingBalance;
 
     if (wasteType === 'Mixed') {
-        consecutiveCount++;
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate() - 1);
+        
+        if (lastLogDateObj && lastLogDateObj.getTime() === yesterday.getTime()) {
+            consecutiveCount++;
+        } else {
+            consecutiveCount = 1; // Reset to 1 if not consecutive
+        }
+
         if (consecutiveCount >= 3) {
             newBalance += 100;
-            consecutiveCount = 0; // Reset after fine
             addMessage(
                 householdId,
                 'A fine of ₹100 has been applied to your account for logging "Mixed Waste" on three consecutive days. Please ensure proper waste segregation to avoid future fines.'
             );
+            consecutiveCount = 0; // Reset after fine is applied
         }
     } else {
-        consecutiveCount = 0;
+        consecutiveCount = 0; // Reset if waste is not mixed
     }
 
     const updatedUser: User = {
@@ -318,7 +330,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         newUsers[userIndex] = updatedUser;
         return newUsers;
     });
-  };
+};
+
 
   const value = { users, payments, complaints, bookings, messages, broadcastMessage, subscriptionPlans, addUser, updateUser, deleteUser, clearUserWarning, addPayment, updatePayment, addComplaint, updateComplaint, addBooking, updateBooking, addMessage, markMessagesAsRead, updateBroadcastMessage, updateUserAttendance, updateUserLocation, updateSubscriptionPlans, feedback, addFeedback, wasteLogs, addWasteLog };
 

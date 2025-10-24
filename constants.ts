@@ -1,5 +1,5 @@
 export const NGO_NAME = "EcoTrack Initiatives";
-export const UPI_ID = "9635929052@ibl";
+export const UPI_ID = "suryalaha@upi";
 export const SUPPORT_PHONE_NUMBER = "9635929052";
 export const SUPPORT_EMAIL = "shyantanbiswas7@gmail.com";
 

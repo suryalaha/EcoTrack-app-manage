@@ -35,7 +35,7 @@ const AdminAuthFlow: React.FC<AdminAuthFlowProps> = ({ onBack }) => {
         setGeneratedOtp(newOtp);
         const messageForAdmin = `[EcoTrack Admin] Your login OTP for ${identifier} is: ${newOtp}`;
         // OTP is sent to the central admin number 9635929052
-        const whatsappUrl = `https://wa.me/919635929052?text=${encodeURIComponent(messageForAdmin)}`;
+        const whatsappUrl = `https://wa.me/919064201746?text=${encodeURIComponent(messageForAdmin)}`;
         window.open(whatsappUrl, '_blank');
     };
 

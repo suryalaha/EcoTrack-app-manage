@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Home, IndianRupee, History, MessageSquareWarning, Bot, ShoppingBasket, User as UserIcon, Mail, Map } from 'lucide-react';
 
@@ -28,6 +29,7 @@ import AdminAuthFlow from './components/AdminAuthFlow';
 import StaffAuthFlow from './components/StaffAuthFlow';
 import StaffApp from './components/StaffApp';
 import BottomNav from './components/BottomNav';
+import { requestNotificationPermission } from './services/notificationService';
 
 // This is the main user-facing application component
 const UserApp: React.FC<{ users: User[] }> = ({ users }) => {
@@ -42,6 +44,11 @@ const UserApp: React.FC<{ users: User[] }> = ({ users }) => {
   const userPayments = useMemo(() => payments.filter(p => p.householdId === user?.householdId), [payments, user]);
   const userComplaints = useMemo(() => complaints.filter(c => c.householdId === user?.householdId), [complaints, user]);
   const userBookings = useMemo(() => bookings.filter(b => b.householdId === user?.householdId), [bookings, user]);
+  
+  useEffect(() => {
+    // Request permission for push notifications on app load
+    requestNotificationPermission();
+  }, []);
 
   useEffect(() => {
     if (broadcastMessage && sessionStorage.getItem('lastDismissedBroadcast') !== broadcastMessage) {
