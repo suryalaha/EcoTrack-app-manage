@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EcoTrack Solid Waste Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class', // Enable class-based dark mode
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                DEFAULT: '#10b981', // emerald-500
+                light: '#34d399',   // emerald-400
+                dark: '#059669',    // emerald-600
+              },
+              accent: {
+                DEFAULT: '#22d3ee', // cyan-400
+                dark: '#06b6d4',    // cyan-500
+              },
+              secondary: {
+                DEFAULT: '#64748b', // slate-500
+                dark: '#94a3b8',    // slate-400
+              },
+              background: {
+                light: '#f8fafc', // slate-50
+                dark: '#020617',  // slate-950
+              },
+              card: {
+                light: '#ffffff', // white
+                dark: '#1e293b',  // slate-800
+              },
+              text: {
+                light: '#475569', // slate-600
+                dark: '#cbd5e1',  // slate-300
+              },
+              heading: {
+                light: '#1e293b', // slate-800
+                dark: '#f1f5f9',  // slate-100
+              },
+              border: {
+                  light: '#e2e8f0', // slate-200
+                  dark: '#334155', // slate-700
+              },
+              success: '#22c55e', // green-500
+              warning: '#f59e0b', // amber-500
+              info: '#3b82f6', // blue-500,
+            },
+            boxShadow: {
+                'glow-primary': '0 0 15px 0 rgba(16, 185, 129, 0.4)',
+                'glow-accent': '0 0 15px 0 rgba(34, 211, 238, 0.4)',
+            },
+            keyframes: {
+              'fade-in': {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              'fade-in-down': {
+                '0%': { opacity: '0', transform: 'translateY(-10px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              'fade-in-up': {
+                '0%': { opacity: '0', transform: 'translateY(10px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              'scale-in': {
+                '0%': { opacity: '0', transform: 'scale(0.95)' },
+                '100%': { opacity: '1', transform: 'scale(1)' },
+              },
+              'pulse-glow': {
+                '0%, 100%': { opacity: '1', boxShadow: 'none' },
+                '50%': { opacity: '0.9', boxShadow: '0 0 15px 0 rgba(16, 185, 129, 0.5)' },
+              }
+            },
+            animation: {
+              'fade-in': 'fade-in 0.5s ease-out forwards',
+              'fade-in-down': 'fade-in-down 0.5s ease-out forwards',
+              'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
+              'scale-in': 'scale-in 0.3s ease-out forwards',
+              'pulse-glow': 'pulse-glow 2s infinite ease-in-out',
+            },
+          },
+        },
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.25.0",
+    "recharts": "https://aistudiocdn.com/recharts@^3.3.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.546.0",
+    "jspdf": "https://aistudiocdn.com/jspdf@^3.0.3",
+    "qrcode.react": "https://aistudiocdn.com/qrcode.react@^4.2.0"
+  }
+}
+</script>
+</head>
+  <body class="bg-background-light dark:bg-background-dark">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

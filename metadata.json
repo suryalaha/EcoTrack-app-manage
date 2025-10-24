@@ -1,0 +1,8 @@
+{
+  "name": " EcoTrack Solid Waste Management",
+  "description": "A comprehensive app for households to manage solid waste collection, payments, and learn about segregation, featuring an AI assistant for support.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
