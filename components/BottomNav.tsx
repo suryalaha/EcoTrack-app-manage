@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Home, IndianRupee, History, Mail, ShoppingBasket, User as UserIcon } from 'lucide-react';
+import { Home, IndianRupee, History, Map, ShoppingBasket, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { View, ViewType } from '../types';
@@ -23,10 +23,10 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentView, setCurrentView }) =>
   const navItems = useMemo(() => [
     { view: ViewType.Dashboard, icon: Home, label: t('home') },
     { view: ViewType.Payment, icon: IndianRupee, label: t('pay') },
-    { view: ViewType.Messages, icon: Mail, label: t('inbox'), badgeCount: unreadCount },
+    { view: ViewType.Tracking, icon: Map, label: t('track') },
     { view: ViewType.Booking, icon: ShoppingBasket, label: t('book') },
     { view: ViewType.History, icon: History, label: t('history') },
-    { view: ViewType.Profile, icon: UserIcon, label: t('profile') },
+    { view: ViewType.Profile, icon: UserIcon, label: t('profile'), badgeCount: unreadCount },
   ], [t, unreadCount]);
 
   return (

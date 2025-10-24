@@ -4,6 +4,7 @@ export default {
   "home": "হোম",
   "pay": "পে করুন",
   "inbox": "ইনবক্স",
+  "track": "ট্র্যাক",
   "book": "বুক করুন",
   "history": "ইতিহাস",
   "profile": "প্রোফাইল",

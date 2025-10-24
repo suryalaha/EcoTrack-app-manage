@@ -4,6 +4,7 @@ export default {
   "home": "Home",
   "pay": "Pay",
   "inbox": "Inbox",
+  "track": "Track",
   "book": "Book",
   "history": "History",
   "profile": "Profile",

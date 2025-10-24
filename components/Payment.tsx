@@ -123,7 +123,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({ setCurrentView }) =
                     {paymentAmount > 0 ? (
                         <p className="text-5xl font-bold text-primary my-2">₹{paymentAmount.toFixed(2)}</p>
                     ) : (
-                         <p className="text-3xl font-bold text-success my-2 flex items-center"><CheckCircle className="mr-2"/> Cleared!</p>
+                         <p className="text-3xl font-bold text-success my-2 flex items-center justify-center"><CheckCircle className="mr-2"/> Cleared!</p>
                     )}
                     <p className="text-xs text-slate-400 dark:text-slate-500">for {new Date().toLocaleString('default', { month: 'long' })}</p>
                 </div>
@@ -131,37 +131,53 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({ setCurrentView }) =
             
             {paymentAmount > 0 ? (
                 <>
-                <div className="mt-8 max-w-sm mx-auto space-y-4">
-                     <a 
-                        href={upiPaymentUrl}
-                        className="w-full bg-gradient-to-r from-secondary to-slate-700 dark:from-slate-600 dark:to-slate-800 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center text-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105"
-                    >
-                        <Wallet className="mr-3" /> Pay with UPI App
-                    </a>
-                    <button 
-                        onClick={() => setShowQrModal(true)}
-                        className="w-full bg-gradient-to-r from-secondary to-slate-700 dark:from-slate-600 dark:to-slate-800 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center text-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105"
-                    >
-                        <QrCode className="mr-3" /> Scan QR Code
-                    </button>
-                </div>
-                
-                <div className="mt-8 max-w-sm mx-auto p-4 rounded-lg bg-slate-100 dark:bg-slate-800/50 border border-border-light dark:border-border-dark">
-                    <p className="text-sm text-text-light dark:text-text-dark mb-4">After paying, upload a screenshot to confirm.</p>
-                     <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
-                     <button 
-                        onClick={() => fileInputRef.current?.click()}
-                        className="w-full bg-gradient-to-r from-primary to-accent text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center text-lg shadow-lg hover:shadow-glow-primary transition-all transform hover:scale-105"
-                    >
-                        <UploadCloud className="mr-3" /> Upload Screenshot
-                    </button>
-                </div>
+                    <div className="mt-8 max-w-sm mx-auto p-4 rounded-lg bg-slate-100/70 dark:bg-slate-800/50 border border-border-light dark:border-border-dark">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg">1</div>
+                            <h3 className="text-left text-lg font-semibold text-heading-light dark:text-heading-dark">Complete Your Payment</h3>
+                        </div>
+                         <p className="text-sm text-text-light dark:text-text-dark mb-4 text-left">Choose your preferred UPI method to pay the outstanding amount.</p>
+                        <div className="space-y-3">
+                             <a 
+                                href={upiPaymentUrl}
+                                className="w-full bg-gradient-to-r from-secondary to-slate-700 dark:from-slate-600 dark:to-slate-800 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center text-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105"
+                            >
+                                <Wallet className="mr-3" /> Pay with UPI App
+                            </a>
+                            <button 
+                                onClick={() => setShowQrModal(true)}
+                                className="w-full bg-gradient-to-r from-secondary to-slate-700 dark:from-slate-600 dark:to-slate-800 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center text-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105"
+                            >
+                                <QrCode className="mr-3" /> Scan QR Code
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 max-w-sm mx-auto p-4 rounded-lg bg-slate-100/70 dark:bg-slate-800/50 border border-border-light dark:border-border-dark">
+                         <div className="flex items-center gap-3 mb-4">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg">2</div>
+                            <h3 className="text-left text-lg font-semibold text-heading-light dark:text-heading-dark">Upload Proof</h3>
+                        </div>
+                         <p className="text-sm text-text-light dark:text-text-dark mb-4 text-left">After successful payment, a screenshot is mandatory for verification.</p>
+                        <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
+                        <button 
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-full bg-gradient-to-r from-primary to-accent text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center text-lg shadow-lg hover:shadow-glow-primary transition-all transform hover:scale-105"
+                        >
+                            <UploadCloud className="mr-3" /> Upload Screenshot
+                        </button>
+                    </div>
                 </>
             ) : (
                 <div className="mt-8 max-w-sm mx-auto p-4">
                     <p className="text-lg text-success font-semibold">You have no outstanding balance. Thank you!</p>
                 </div>
             )}
+
+            <div className="mt-6 max-w-sm mx-auto p-3 rounded-lg bg-green-500/5 dark:bg-green-500/10 border border-green-500/20 flex justify-center items-center space-x-2 text-green-700 dark:text-green-300">
+                <ShieldCheck size={18} />
+                <p className="text-sm font-semibold">All transactions are secure and PCI-DSS compliant.</p>
+            </div>
         </div>
     );
 
@@ -234,7 +250,10 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({ setCurrentView }) =
 
     const renderConfirmStep = () => (
         <div className="text-center p-4 flex flex-col items-center justify-center h-full animate-scale-in">
-            <CheckCircle className="w-20 h-20 text-primary mb-4" />
+            <div className="relative w-24 h-24 flex items-center justify-center mb-4 animate-pulse-glow">
+                <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-full blur-lg opacity-50"></div>
+                <CheckCircle className="w-20 h-20 text-white relative" />
+            </div>
             <h2 className="text-3xl font-bold text-heading-light dark:text-heading-dark">Submitted Successfully!</h2>
             <p className="text-text-light dark:text-text-dark mt-2 mb-6 max-w-sm">Your payment is now pending verification. Our team will review it shortly. You can check the status in your payment history.</p>
             <button
